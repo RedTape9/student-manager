@@ -1,5 +1,7 @@
 package io.github.redtape9.studentmanager.service;
 
+import io.github.redtape9.studentmanager.exception.NoStudentsFoundException;
+import io.github.redtape9.studentmanager.exception.StudentNotFoundException;
 import io.github.redtape9.studentmanager.model.Student;
 import io.github.redtape9.studentmanager.repo.StudentRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,10 +21,11 @@ public class StudentServiceImpl implements StudentService {
 
     @Override
     public List<Student> getAllStudents() {
-        if(studentRepository.findAll().isEmpty()){
-            throw new RuntimeException("No students found");
+        List<Student> students = studentRepository.findAll();
+        if(students.isEmpty()){
+            throw new NoStudentsFoundException();
         }else {
-            return studentRepository.findAll();
+            return students;
         }
     }
 
@@ -31,21 +34,21 @@ public class StudentServiceImpl implements StudentService {
         if(studentOptional.isPresent()){
             return studentOptional.get();
         } else {
-            throw new RuntimeException("Student not found");
+            throw new StudentNotFoundException(id);
         }
     }
 
     @Override
     public void deleteStudent(Long id) {
         if(!studentRepository.existsById(id)){
-            throw new RuntimeException("Student not found");
+            throw new StudentNotFoundException(id);
         } else {
             studentRepository.deleteById(id);
         }
     }
 
     public void updateStudent(Long id, Student student) {
-        Student existingStudent = studentRepository.findById(id).orElseThrow(() -> new RuntimeException("Student not found"));
+        Student existingStudent = studentRepository.findById(id).orElseThrow(() -> new StudentNotFoundException(id));
         existingStudent.setName(student.getName());
         existingStudent.setAddress(student.getAddress());
         studentRepository.save(existingStudent);
